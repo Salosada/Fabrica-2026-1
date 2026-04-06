@@ -61,7 +61,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-zinc-50 px-4">
+    <main className="flex min-h-screen items-center justify-center bg-zinc-50 px-4 py-8">
       <Card className="w-full max-w-sm shadow-lg">
         {/* ── Header ── */}
         <CardHeader className="space-y-1">

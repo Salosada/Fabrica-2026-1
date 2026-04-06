@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -43,21 +44,40 @@ const navItems = [
   },
 ];
 
-export function Sidebar() {
+function NavContent({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  function handleLogout() {
+    router.push("/login");
+  }
 
   return (
-    <aside className="flex h-full w-60 flex-col border-r border-zinc-200 bg-white px-3 py-4">
+    <>
       {/* Logo */}
-      <div className="mb-6 flex items-center gap-2 px-2">
-        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-black text-white text-xs font-bold">
-          A
+      <div className="mb-6 flex items-center justify-between px-2">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white text-sm font-bold shadow-md">
+            A
+          </div>
+          <span className="text-base font-bold tracking-tight text-white">AppStripe</span>
         </div>
-        <span className="text-base font-bold tracking-tight">AppStripe</span>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="rounded p-1 text-slate-400 hover:text-white hover:bg-slate-700 lg:hidden"
+            aria-label="Cerrar menú"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        )}
       </div>
 
       {/* Navigation */}
-      <nav className="flex flex-col gap-1">
+      <nav className="flex flex-col gap-0.5">
         {navItems.map((item) => {
           const isActive =
             item.href === "/dashboard"
@@ -67,11 +87,12 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onClose}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                 isActive
-                  ? "bg-zinc-100 text-zinc-900"
-                  : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
+                  ? "bg-blue-600 text-white shadow-sm"
+                  : "text-slate-300 hover:bg-slate-700 hover:text-white"
               )}
             >
               {item.icon}
@@ -81,18 +102,88 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Footer */}
+      {/* Footer — Logout */}
       <div className="mt-auto px-2">
-        <Link
-          href="/login"
-          className="flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-900 transition-colors"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="9" y1="12" y2="12" />
-          </svg>
-          Cerrar sesión
-        </Link>
+        {showConfirm ? (
+          <div className="rounded-lg bg-slate-700 border border-slate-600 p-3 text-sm">
+            <p className="text-slate-100 mb-3 font-medium text-center">¿Cerrar sesión?</p>
+            <div className="flex gap-2">
+              <button
+                onClick={handleLogout}
+                className="flex-1 rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700 transition-colors"
+              >
+                Salir
+              </button>
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="flex-1 rounded-md bg-slate-600 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-500 transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowConfirm(true)}
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-400 hover:text-red-400 hover:bg-slate-700 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="9" y1="12" y2="12" />
+            </svg>
+            Cerrar sesión
+          </button>
+        )}
       </div>
-    </aside>
+    </>
+  );
+}
+
+export function Sidebar() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      {/* ── Desktop sidebar ── */}
+      <aside className="hidden lg:flex h-full w-60 flex-col bg-slate-900 px-3 py-4">
+        <NavContent />
+      </aside>
+
+      {/* ── Mobile top bar ── */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between border-b border-slate-800 bg-slate-900 px-4 py-3">
+        <div className="flex items-center gap-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 text-white text-xs font-bold">
+            A
+          </div>
+          <span className="text-base font-bold tracking-tight text-white">AppStripe</span>
+        </div>
+        <button
+          onClick={() => setOpen(true)}
+          className="rounded p-1.5 text-slate-300 hover:bg-slate-700"
+          aria-label="Abrir menú"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="4" y1="6" x2="20" y2="6" /><line x1="4" y1="12" x2="20" y2="12" /><line x1="4" y1="18" x2="20" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      {/* ── Mobile drawer overlay ── */}
+      {open && (
+        <div
+          className="lg:hidden fixed inset-0 z-40 bg-black/50"
+          onClick={() => setOpen(false)}
+        />
+      )}
+
+      {/* ── Mobile drawer panel ── */}
+      <div
+        className={cn(
+          "lg:hidden fixed top-0 left-0 z-50 h-full w-64 flex flex-col bg-slate-900 px-3 py-4 transition-transform duration-300",
+          open ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <NavContent onClose={() => setOpen(false)} />
+      </div>
+    </>
   );
 }

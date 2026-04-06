@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import {
   Table,
   TableBody,
@@ -8,7 +11,10 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TablePagination } from "@/components/ui/pagination";
 import type { Merchant } from "@/lib/api";
+
+const PAGE_SIZE = 2;
 
 // Datos de muestra para mostrar la UI hasta que el backend tenga el endpoint
 const mockMerchants: Merchant[] = [
@@ -51,11 +57,15 @@ const statusLabelMap: Record<Merchant["status"], string> = {
 };
 
 export default function MerchantsPage() {
+  const [page, setPage] = useState(1);
+  const totalPages = Math.ceil(mockMerchants.length / PAGE_SIZE);
+  const paged = mockMerchants.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-zinc-900">Comerciantes</h1>
-        <p className="text-sm text-zinc-500 mt-1">
+        <h1 className="text-2xl font-bold text-foreground">Comerciantes</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           Gestión de comerciantes registrados en la plataforma.
           <span className="ml-2 text-amber-500 font-medium">
             [Datos de muestra — endpoint en desarrollo]
@@ -67,31 +77,34 @@ export default function MerchantsPage() {
         <CardHeader>
           <CardTitle className="text-base">Listado de comerciantes</CardTitle>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Razón social</TableHead>
-                <TableHead>NIT / ID</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Estado</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {mockMerchants.map((m) => (
-                <TableRow key={m.id}>
-                  <TableCell className="font-medium">{m.businessName}</TableCell>
-                  <TableCell>{m.businessId}</TableCell>
-                  <TableCell>{m.email}</TableCell>
-                  <TableCell>
-                    <Badge variant={statusVariantMap[m.status]}>
-                      {statusLabelMap[m.status]}
-                    </Badge>
-                  </TableCell>
+        <CardContent className="p-0 sm:p-6 sm:pb-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Razón social</TableHead>
+                  <TableHead>NIT / ID</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Estado</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {paged.map((m) => (
+                  <TableRow key={m.id}>
+                    <TableCell className="font-medium">{m.businessName}</TableCell>
+                    <TableCell>{m.businessId}</TableCell>
+                    <TableCell>{m.email}</TableCell>
+                    <TableCell>
+                      <Badge variant={statusVariantMap[m.status]}>
+                        {statusLabelMap[m.status]}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <TablePagination page={page} totalPages={totalPages} onPageChange={setPage} />
         </CardContent>
       </Card>
     </div>
