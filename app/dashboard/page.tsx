@@ -55,7 +55,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       {/* Page header */}
-      <div className="rounded-xl bg-gradient-to-r from-blue-700 to-blue-500 px-6 py-5 text-white shadow-md">
+      <div className="rounded-xl bg-gradient-to-r from-slate-700 to-blue-700 px-6 py-5 text-white shadow-md">
         <h1 className="text-2xl font-bold tracking-tight">Panel de control</h1>
         <p className="text-blue-100 text-sm mt-1">
           Bienvenido a AppStripe — resumen general del sistema de pagos B2B.

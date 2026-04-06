@@ -58,7 +58,7 @@ function NavContent({ onClose }: { onClose?: () => void }) {
       {/* Logo */}
       <div className="mb-6 flex items-center justify-between px-2">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white text-sm font-bold shadow-md">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500 text-white text-sm font-bold shadow-md">
             A
           </div>
           <span className="text-base font-bold tracking-tight text-white">AppStripe</span>
@@ -91,8 +91,8 @@ function NavContent({ onClose }: { onClose?: () => void }) {
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                 isActive
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "text-slate-300 hover:bg-slate-700 hover:text-white"
+                  ? "bg-blue-500 text-white shadow-sm"
+                  : "text-slate-300 hover:bg-slate-700/80 hover:text-white"
               )}
             >
               {item.icon}
@@ -151,7 +151,7 @@ export function Sidebar() {
       {/* ── Mobile top bar ── */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between border-b border-slate-800 bg-slate-900 px-4 py-3">
         <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 text-white text-xs font-bold">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-500 text-white text-xs font-bold">
             A
           </div>
           <span className="text-base font-bold tracking-tight text-white">AppStripe</span>

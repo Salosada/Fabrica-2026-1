@@ -12,7 +12,7 @@
     --popover:       0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary:       221 83% 38%;        /* Azul marino fuerte */
+    --primary:       221 58% 45%;        /* Azul marino suave */
     --primary-foreground: 0 0% 100%;
 
     --secondary:     217 33% 91%;        /* Azul pálido para badges secundarios */
@@ -29,13 +29,13 @@
 
     --border:        217 30% 88%;
     --input:         217 30% 88%;
-    --ring:          221 83% 38%;
+    --ring:          221 58% 45%;
     --radius:        0.5rem;
 
     /* Sidebar dark */
     --sidebar-bg:        222 47% 11%;    /* Azul marino oscuro */
     --sidebar-fg:        215 30% 75%;    /* Texto apagado */
-    --sidebar-active-bg: 221 83% 28%;   /* Activo más oscuro */
+    --sidebar-active-bg: 221 58% 30%;   /* Activo suave */
     --sidebar-active-fg: 0 0% 100%;
     --sidebar-hover-bg:  222 40% 17%;
   }
