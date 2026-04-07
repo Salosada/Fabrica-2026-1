@@ -1,4 +1,6 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+// All API calls go through the Next.js proxy at /backend/* → backend server
+// This avoids CORS issues when frontend and backend are on different domains.
+const BASE_URL = "/backend";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -7,20 +9,25 @@ export interface CodeRequest {
   code: number;
 }
 
+export interface RegisterMerchantRequest {
+  businessName: string;
+  businessId: string;
+  email: string;
+  businessType: string;
+}
+
 export interface Merchant {
   id: string;
   businessName: string;
   businessId: string;
   email: string;
+  businessType: string;
   status: "INACTIVE" | "VERIFIED" | "SUSPENDED";
 }
 
-export interface ApiCredential {
-  id: string;
+export interface CredentialResponse {
   publicId: string;
-  plainSecret?: string;
-  active: boolean;
-  merchantId: string;
+  secret: string;
 }
 
 export interface Transaction {
@@ -28,6 +35,11 @@ export interface Transaction {
   merchantId: string;
   amount: number;
   status: "CREATED" | "PROCESSING" | "APPROVED" | "REJECTED" | "FAILED";
+}
+
+export interface CreateTransactionRequest {
+  merchantId: string;
+  amount: number;
 }
 
 // ─── HTTP helper ──────────────────────────────────────────────────────────────
@@ -64,33 +76,34 @@ export const authApi = {
     }),
 };
 
-// ─── Merchants (ready for future sprint endpoints) ────────────────────────────
+// ─── Merchants ────────────────────────────────────────────────────────────────
 
 export const merchantApi = {
-  list: () => request<Merchant[]>("/merchants"),
-  getById: (id: string) => request<Merchant>(`/merchants/${id}`),
-  create: (data: Omit<Merchant, "id" | "status">) =>
-    request<Merchant>("/merchants", { method: "POST", body: JSON.stringify(data) }),
-};
-
-// ─── Credentials (ready for future sprint endpoints) ─────────────────────────
-
-export const credentialApi = {
-  generate: (merchantId: string) =>
-    request<ApiCredential>(`/merchants/${merchantId}/credentials`, {
-      method: "POST",
-    }),
-  list: (merchantId: string) =>
-    request<ApiCredential[]>(`/merchants/${merchantId}/credentials`),
-};
-
-// ─── Transactions (ready for future sprint endpoints) ─────────────────────────
-
-export const transactionApi = {
-  list: () => request<Transaction[]>("/transactions"),
-  create: (data: Pick<Transaction, "merchantId" | "amount">) =>
-    request<Transaction>("/transactions", {
+  create: (data: RegisterMerchantRequest) =>
+    request<Merchant>("/api/v1/merchants", {
       method: "POST",
       body: JSON.stringify(data),
     }),
+};
+
+// ─── Credentials ─────────────────────────────────────────────────────────────
+
+export const credentialApi = {
+  generate: (merchantId: string) =>
+    request<CredentialResponse>("/api/v1/credentials/generate", {
+      method: "POST",
+      body: JSON.stringify({ merchantId }),
+    }),
+};
+
+// ─── Transactions ─────────────────────────────────────────────────────────────
+
+export const transactionApi = {
+  create: (data: CreateTransactionRequest) =>
+    request<Transaction>("/api/v1/transactions", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  getById: (id: string) =>
+    request<Transaction>(`/api/v1/transactions/${id}`),
 };

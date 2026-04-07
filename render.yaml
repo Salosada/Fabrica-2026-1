@@ -1,0 +1,24 @@
+# ─── Render Blueprint — AppStripe Frontend ────────────────────────────────────
+# Docs: https://render.com/docs/blueprint-spec
+#
+# PREREQUISITO: Despliega primero el backend (ver backend-eap07-codefactory/render.yaml)
+# y copia la URL pública que te asigne Render (ej.: https://appstripe-api.onrender.com).
+# ──────────────────────────────────────────────────────────────────────────────
+
+services:
+  - type: web
+    name: appstripe-frontend
+    runtime: node
+    region: oregon          # misma región que el backend para menor latencia
+    plan: free
+    rootDir: .              # este archivo vive en la raíz del repo del frontend
+    buildCommand: "npm ci && npm run build"
+    startCommand: "npm start"
+    envVars:
+      # URL interna del backend — las llamadas API usan el proxy de Next.js
+      # (servidor → servidor, sin CORS). Reemplaza con la URL real de tu backend en Render.
+      - key: BACKEND_URL
+        value: https://appstripe-api.onrender.com   # ← cambia por tu URL real
+
+      - key: NODE_ENV
+        value: production
