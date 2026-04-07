@@ -1,57 +1,98 @@
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+"use client";
 
-const stats = [
-  {
-    title: "Comerciantes activos",
-    value: "—",
-    description: "Próximo sprint",
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" />
-      </svg>
-    ),
-  },
-  {
-    title: "Transacciones hoy",
-    value: "—",
-    description: "Próximo sprint",
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
-      </svg>
-    ),
-  },
-  {
-    title: "Monto total procesado",
-    value: "—",
-    description: "Próximo sprint",
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-      </svg>
-    ),
-  },
-  {
-    title: "Credenciales activas",
-    value: "—",
-    description: "Próximo sprint",
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="7.5" cy="15.5" r="5.5" /><path d="m21 2-9.6 9.6" /><path d="m15.5 7.5 3 3L22 7l-3-3" />
-      </svg>
-    ),
-  },
-];
+import { useEffect, useState } from "react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { merchantApi, credentialApi, transactionApi, type Transaction } from "@/lib/api";
+
+interface Stats {
+  merchants: number;
+  transactions: number;
+  totalAmount: number;
+  credentials: number;
+}
 
 const sprintItems = [
-  { label: "Autenticación 2FA (POST /2fa/verify)", done: true },
-  { label: "Registro de comerciantes", done: false },
-  { label: "Generación de credenciales API", done: false },
-  { label: "Creación de transacciones", done: false },
-  { label: "Gestión de estado de transacciones", done: false },
+  { label: "HU001 — Registro de comerciantes",               hu: "HU001", done: true  },
+  { label: "HU002 — Generación de credenciales API",         hu: "HU002", done: true  },
+  { label: "HU003 — Creación de solicitudes de pago",        hu: "HU003", done: true  },
+  { label: "HU004 — Estado inicial de transacciones",        hu: "HU004", done: true  },
+  { label: "HU005 — Inicio de sesión con 2FA",               hu: "HU005", done: true  },
+  { label: "HU006 — Validación de credenciales por solicitud", hu: "HU006", done: false },
 ];
 
+function formatCOP(amount: number) {
+  return new Intl.NumberFormat("es-CO", {
+    style: "currency",
+    currency: "COP",
+    minimumFractionDigits: 0,
+  }).format(amount);
+}
+
 export default function DashboardPage() {
+  const [stats, setStats] = useState<Stats | null>(null);
+
+  useEffect(() => {
+    Promise.all([
+      merchantApi.list(),
+      credentialApi.list(),
+      transactionApi.list(),
+    ]).then(([merchants, credentials, transactions]) => {
+      setStats({
+        merchants: merchants.length,
+        credentials: credentials.filter((c) => c.active).length,
+        transactions: transactions.length,
+        totalAmount: (transactions as Transaction[]).reduce((sum, t) => sum + t.amount, 0),
+      });
+    }).catch(() => {});
+  }, []);
+
+  const statCards = [
+    {
+      title: "Comerciantes registrados",
+      value: stats ? String(stats.merchants) : "…",
+      description: "HU001",
+      color: "text-emerald-600",
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" />
+        </svg>
+      ),
+    },
+    {
+      title: "Transacciones creadas",
+      value: stats ? String(stats.transactions) : "…",
+      description: "HU003 / HU004",
+      color: "text-amber-600",
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
+        </svg>
+      ),
+    },
+    {
+      title: "Monto total solicitado",
+      value: stats ? formatCOP(stats.totalAmount) : "…",
+      description: "Suma de todas las transacciones",
+      color: "text-blue-600",
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+        </svg>
+      ),
+    },
+    {
+      title: "Credenciales activas",
+      value: stats ? String(stats.credentials) : "…",
+      description: "HU002",
+      color: "text-violet-600",
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="7.5" cy="15.5" r="5.5" /><path d="m21 2-9.6 9.6" /><path d="m15.5 7.5 3 3L22 7l-3-3" />
+        </svg>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-8">
       {/* Page header */}
@@ -64,7 +105,7 @@ export default function DashboardPage() {
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        {stats.map((s) => (
+        {statCards.map((s) => (
           <Card key={s.title} className="shadow-sm">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
@@ -75,7 +116,7 @@ export default function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold text-foreground">{s.value}</p>
+              <p className={`text-3xl font-bold ${s.color}`}>{s.value}</p>
               <p className="text-xs text-muted-foreground mt-1">{s.description}</p>
             </CardContent>
           </Card>
@@ -85,11 +126,16 @@ export default function DashboardPage() {
       {/* Sprint status */}
       <Card className="shadow-sm">
         <CardHeader className="border-b pb-4">
-          <div className="flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">
-              1
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">
+                1
+              </span>
+              <CardTitle className="text-base">Estado del proyecto — Sprint 1</CardTitle>
+            </div>
+            <span className="rounded-full bg-emerald-100 border border-emerald-200 px-3 py-0.5 text-xs font-semibold text-emerald-700">
+              5 / 6 completadas
             </span>
-            <CardTitle className="text-base">Estado del proyecto — Sprint 1</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="pt-4">
@@ -97,22 +143,28 @@ export default function DashboardPage() {
             {sprintItems.map((item) => (
               <li key={item.label} className="flex items-center gap-3">
                 {item.done ? (
-                  <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-500 text-white">
+                  <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white">
                     <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
                   </span>
                 ) : (
-                  <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 border-muted-foreground/30" />
+                  <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 border-2 border-amber-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-amber-600">
+                      <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                  </span>
                 )}
                 <span className={item.done ? "text-foreground font-medium" : "text-muted-foreground"}>
                   {item.label}
                 </span>
-                {item.done && (
-                  <span className="ml-auto flex-shrink-0 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
-                    Disponible
-                  </span>
-                )}
+                <span className={`ml-auto flex-shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
+                  item.done
+                    ? "bg-emerald-100 text-emerald-700"
+                    : "bg-amber-100 text-amber-700"
+                }`}>
+                  {item.done ? "Cerrada" : "En progreso"}
+                </span>
               </li>
             ))}
           </ul>
@@ -121,3 +173,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+
