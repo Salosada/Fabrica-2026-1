@@ -54,6 +54,8 @@ export default function MerchantsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState<RegisterMerchantRequest>(emptyForm);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const totalPages = Math.ceil(merchants.length / PAGE_SIZE);
   const paged = merchants.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -72,6 +74,8 @@ export default function MerchantsPage() {
       setForm(emptyForm);
       setShowForm(false);
       setPage(1);
+      setSuccessMsg(`Comerciante "${created.businessName}" registrado correctamente. ID: ${created.id}`);
+      setTimeout(() => setSuccessMsg(null), 6000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al registrar comerciante");
     } finally {
@@ -88,6 +92,16 @@ export default function MerchantsPage() {
           Gestión de comerciantes registrados en la plataforma.
         </p>
       </div>
+
+      {/* Success banner */}
+      {successMsg && (
+        <div className="flex items-start gap-3 rounded-lg bg-emerald-50 border border-emerald-300 px-4 py-3 text-sm text-emerald-800">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 flex-shrink-0 text-emerald-600">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
+          </svg>
+          <span>{successMsg}</span>
+        </div>
+      )}
 
       {/* Summary chips + action */}
       <div className="flex flex-wrap gap-3 items-center justify-between">
@@ -197,6 +211,7 @@ export default function MerchantsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-slate-50 hover:bg-slate-50">
+                      <TableHead className="font-semibold text-slate-600">ID Interno</TableHead>
                       <TableHead className="font-semibold text-slate-600">Razón social</TableHead>
                       <TableHead className="font-semibold text-slate-600">NIT / ID</TableHead>
                       <TableHead className="font-semibold text-slate-600">Email</TableHead>
@@ -206,6 +221,31 @@ export default function MerchantsPage() {
                   <TableBody>
                     {paged.map((m) => (
                       <TableRow key={m.id} className="hover:bg-slate-50 transition-colors">
+                        <TableCell>
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-mono text-xs text-slate-400">{m.id.slice(0, 8)}…</span>
+                            <button
+                              type="button"
+                              title="Copiar ID"
+                              onClick={() => {
+                                navigator.clipboard.writeText(m.id);
+                                setCopiedId(m.id);
+                                setTimeout(() => setCopiedId(null), 2000);
+                              }}
+                              className="rounded p-0.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+                            >
+                              {copiedId === m.id ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600">
+                                  <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                              ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                                </svg>
+                              )}
+                            </button>
+                          </div>
+                        </TableCell>
                         <TableCell className="font-medium">{m.businessName}</TableCell>
                         <TableCell className="font-mono text-xs text-slate-500">{m.businessId}</TableCell>
                         <TableCell className="text-slate-600">{m.email}</TableCell>

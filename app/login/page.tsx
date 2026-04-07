@@ -191,7 +191,7 @@ export default function LoginPage() {
                   onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
                   className="text-center text-xl tracking-[0.5em] font-mono border-slate-300"
                 />
-                <p className="text-xs text-slate-500 text-center">Abre Google Authenticator y copia el código de 6 dígitos</p>
+                <p className="text-xs text-slate-500 text-center">Para esta demo, ingresa el código <span className="font-semibold text-slate-700">123456</span></p>
               </div>
               {error && (
                 <div className="flex items-center gap-2 rounded-md bg-red-50 border border-red-200 px-3 py-2">
