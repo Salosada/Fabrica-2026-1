@@ -66,16 +66,16 @@ export default function LoginPage() {
       <div className="hidden lg:flex lg:w-5/12 flex-col justify-between bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 p-12 text-white">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white text-lg font-bold">
-            A
+            P
           </div>
-          <span className="text-xl font-bold tracking-tight">AppStripe</span>
+          <span className="text-xl font-bold tracking-tight">Paycore</span>
         </div>
         <div className="space-y-5">
           <h2 className="text-3xl font-bold leading-snug">
             Plataforma de pagos B2B para el negocio moderno
           </h2>
           <p className="text-slate-300 text-sm leading-relaxed">
-            Gestiona comerciantes, transacciones y credenciales API desde un solo lugar con seguridad y trazabilidad completa.
+            Gestiona comercios, transacciones y credenciales API desde un solo lugar con seguridad y trazabilidad completa.
           </p>
           <div className="flex flex-col gap-2.5 pt-1 text-sm text-slate-400">
             <span className="flex items-center gap-2">
@@ -84,7 +84,7 @@ export default function LoginPage() {
             </span>
             <span className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-blue-400" />
-              Gestión de comerciantes y transacciones
+              Gestión de comercios y transacciones
             </span>
             <span className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-violet-400" />
@@ -92,7 +92,7 @@ export default function LoginPage() {
             </span>
           </div>
         </div>
-        <p className="text-slate-600 text-xs">© 2026 AppStripe — Code Factory</p>
+        <p className="text-slate-600 text-xs">© 2026 Paycore — Code Factory</p>
       </div>
 
       {/* ── Right panel — form ── */}
@@ -100,9 +100,9 @@ export default function LoginPage() {
         {/* Mobile brand */}
         <div className="lg:hidden flex items-center gap-2 mb-8">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-800 text-white text-sm font-bold">
-            A
+            P
           </div>
-          <span className="text-xl font-bold tracking-tight text-slate-900">AppStripe</span>
+          <span className="text-xl font-bold tracking-tight text-slate-900">Paycore</span>
         </div>
 
       <Card className="w-full max-w-sm shadow-xl border border-slate-200 bg-white">
@@ -147,7 +147,7 @@ export default function LoginPage() {
                 <Label htmlFor="username" className="text-slate-700 font-medium text-sm">Usuario</Label>
                 <Input
                   id="username"
-                  placeholder="admin@appstripe.com"
+                  placeholder="admin@paycore.com"
                   autoComplete="username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
@@ -208,7 +208,7 @@ export default function LoginPage() {
               </Button>
               <button
                 type="button"
-                className="text-sm text-slate-500 hover:text-slate-700 transition-colors py-1"
+                className="w-full rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-colors"
                 onClick={() => {
                   setStep("username");
                   setCode("");

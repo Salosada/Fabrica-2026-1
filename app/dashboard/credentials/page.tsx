@@ -66,7 +66,7 @@ export default function CredentialsPage() {
       <div className="rounded-xl bg-gradient-to-r from-violet-600 to-purple-500 px-6 py-5 text-white shadow-md">
         <h1 className="text-2xl font-bold tracking-tight">Credenciales API</h1>
         <p className="text-violet-100 text-sm mt-1">
-          Llaves de acceso generadas para los comerciantes verificados.
+          Llaves de acceso generadas para los comercios verificados.
         </p>
       </div>
 

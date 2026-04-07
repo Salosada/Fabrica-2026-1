@@ -12,12 +12,12 @@ interface Stats {
 }
 
 const sprintItems = [
-  { label: "HU001 — Registro de comerciantes",               hu: "HU001", done: true  },
-  { label: "HU002 — Generación de credenciales API",         hu: "HU002", done: true  },
-  { label: "HU003 — Creación de solicitudes de pago",        hu: "HU003", done: true  },
-  { label: "HU004 — Estado inicial de transacciones",        hu: "HU004", done: true  },
-  { label: "HU005 — Inicio de sesión con 2FA",               hu: "HU005", done: true  },
-  { label: "HU006 — Validación de credenciales por solicitud", hu: "HU006", done: false },
+  { label: "HU001 — Registro de nuevo comercio",                      hu: "HU001", done: true  },
+  { label: "HU002 — Generación de credenciales de acceso a la API",   hu: "HU002", done: true  },
+  { label: "HU003 — Creación de una transacción",                     hu: "HU003", done: true  },
+  { label: "HU004 — Asignación del estado inicial de un pago",        hu: "HU004", done: true  },
+  { label: "HU005 — Autenticación con doble factor (provisional)",    hu: "HU005", done: false },
+  { label: "HU006 — Validación de credenciales por solicitud",        hu: "HU006", done: false },
 ];
 
 function formatCOP(amount: number) {
@@ -48,7 +48,7 @@ export default function DashboardPage() {
 
   const statCards = [
     {
-      title: "Comerciantes registrados",
+      title: "Comercios registrados",
       value: stats ? String(stats.merchants) : "…",
       description: "HU001",
       color: "text-emerald-600",
@@ -99,7 +99,7 @@ export default function DashboardPage() {
       <div className="rounded-xl bg-gradient-to-r from-slate-700 to-blue-700 px-6 py-5 text-white shadow-md">
         <h1 className="text-2xl font-bold tracking-tight">Panel de control</h1>
         <p className="text-blue-100 text-sm mt-1">
-          Bienvenido a AppStripe — resumen general del sistema de pagos B2B.
+          Bienvenido a Paycore — resumen general del sistema de pagos B2B.
         </p>
       </div>
 
@@ -134,7 +134,7 @@ export default function DashboardPage() {
               <CardTitle className="text-base">Estado del proyecto — Sprint 1</CardTitle>
             </div>
             <span className="rounded-full bg-emerald-100 border border-emerald-200 px-3 py-0.5 text-xs font-semibold text-emerald-700">
-              5 / 6 completadas
+              4 / 6 completadas
             </span>
           </div>
         </CardHeader>

@@ -86,9 +86,9 @@ export default function MerchantsPage() {
     <div className="space-y-6">
       {/* Page header */}
       <div className="rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 px-6 py-5 text-white shadow-md">
-        <h1 className="text-2xl font-bold tracking-tight">Comerciantes</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Comercios</h1>
         <p className="text-emerald-100 text-sm mt-1">
-          Gestión de comerciantes registrados en la plataforma.
+          Gestión de comercios registrados en la plataforma.
         </p>
       </div>
 
@@ -197,12 +197,12 @@ export default function MerchantsPage() {
 
       <Card className="shadow-sm">
         <CardHeader className="border-b pb-4">
-          <CardTitle className="text-base">Listado de comerciantes</CardTitle>
+          <CardTitle className="text-base">Listado de comercios</CardTitle>
         </CardHeader>
         <CardContent className="p-0 sm:p-6 sm:pb-0">
           {merchants.length === 0 && !loadingList ? (
             <p className="text-center text-slate-400 text-sm py-12">
-              No hay comerciantes registrados aún. Usa el botón para registrar uno.
+              No hay comercios registrados aún. Usa el botón para registrar uno.
             </p>
           ) : loadingList ? (
             <p className="text-center text-slate-400 text-sm py-12">Cargando…</p>

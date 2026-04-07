@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AppStripe",
-  description: "Plataforma de pagos B2B — AppStripe",
+  title: "Paycore",
+  description: "Plataforma de pagos B2B — Paycore",
 };
 
 export default function RootLayout({
