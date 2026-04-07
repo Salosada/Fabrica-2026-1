@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -44,7 +44,16 @@ function formatCOP(amount: number) {
 }
 
 export default function TransactionsPage() {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>(() => {
+    try {
+      const saved = sessionStorage.getItem("transactions");
+      return saved ? (JSON.parse(saved) as Transaction[]) : [];
+    } catch { return []; }
+  });
+
+  useEffect(() => {
+    sessionStorage.setItem("transactions", JSON.stringify(transactions));
+  }, [transactions]);
   const [page, setPage] = useState(1);
 
   // Create form

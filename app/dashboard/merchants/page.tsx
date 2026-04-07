@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -39,7 +39,16 @@ const emptyForm: RegisterMerchantRequest = {
 };
 
 export default function MerchantsPage() {
-  const [merchants, setMerchants] = useState<Merchant[]>([]);
+  const [merchants, setMerchants] = useState<Merchant[]>(() => {
+    try {
+      const saved = sessionStorage.getItem("merchants");
+      return saved ? (JSON.parse(saved) as Merchant[]) : [];
+    } catch { return []; }
+  });
+
+  useEffect(() => {
+    sessionStorage.setItem("merchants", JSON.stringify(merchants));
+  }, [merchants]);
   const [page, setPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -26,7 +26,16 @@ interface StoredCredential {
 }
 
 export default function CredentialsPage() {
-  const [credentials, setCredentials] = useState<StoredCredential[]>([]);
+  const [credentials, setCredentials] = useState<StoredCredential[]>(() => {
+    try {
+      const saved = sessionStorage.getItem("credentials");
+      return saved ? (JSON.parse(saved) as StoredCredential[]) : [];
+    } catch { return []; }
+  });
+
+  useEffect(() => {
+    sessionStorage.setItem("credentials", JSON.stringify(credentials));
+  }, [credentials]);
   const [page, setPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const [merchantId, setMerchantId] = useState("");
