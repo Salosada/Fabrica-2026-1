@@ -15,27 +15,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TablePagination } from "@/components/ui/pagination";
-import { credentialApi, type CredentialResponse } from "@/lib/api";
+import { credentialApi, type CredentialItem, type CredentialResponse } from "@/lib/api";
 
 const PAGE_SIZE = 4;
 
-interface StoredCredential {
-  publicId: string;
-  merchantId: string;
-  active: true;
-}
-
 export default function CredentialsPage() {
-  const [credentials, setCredentials] = useState<StoredCredential[]>(() => {
-    try {
-      const saved = sessionStorage.getItem("credentials");
-      return saved ? (JSON.parse(saved) as StoredCredential[]) : [];
-    } catch { return []; }
-  });
+  const [credentials, setCredentials] = useState<CredentialItem[]>([]);
+  const [loadingList, setLoadingList] = useState(true);
 
   useEffect(() => {
-    sessionStorage.setItem("credentials", JSON.stringify(credentials));
-  }, [credentials]);
+    credentialApi.list()
+      .then(setCredentials)
+      .catch(() => {})
+      .finally(() => setLoadingList(false));
+  }, []);
   const [page, setPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const [merchantId, setMerchantId] = useState("");
@@ -185,10 +178,12 @@ export default function CredentialsPage() {
           <CardTitle className="text-base">Credenciales registradas</CardTitle>
         </CardHeader>
         <CardContent className="p-0 sm:p-6 sm:pb-0">
-          {credentials.length === 0 ? (
+          {credentials.length === 0 && !loadingList ? (
             <p className="text-center text-slate-400 text-sm py-12">
               No hay credenciales generadas aún. Usa el botón para generar una.
             </p>
+          ) : loadingList ? (
+            <p className="text-center text-slate-400 text-sm py-12">Cargando…</p>
           ) : (
             <>
               <div className="overflow-x-auto">

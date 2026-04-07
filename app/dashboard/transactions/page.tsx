@@ -44,16 +44,15 @@ function formatCOP(amount: number) {
 }
 
 export default function TransactionsPage() {
-  const [transactions, setTransactions] = useState<Transaction[]>(() => {
-    try {
-      const saved = sessionStorage.getItem("transactions");
-      return saved ? (JSON.parse(saved) as Transaction[]) : [];
-    } catch { return []; }
-  });
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loadingList, setLoadingList] = useState(true);
 
   useEffect(() => {
-    sessionStorage.setItem("transactions", JSON.stringify(transactions));
-  }, [transactions]);
+    transactionApi.list()
+      .then(setTransactions)
+      .catch(() => {})
+      .finally(() => setLoadingList(false));
+  }, []);
   const [page, setPage] = useState(1);
 
   // Create form
@@ -235,10 +234,12 @@ export default function TransactionsPage() {
           <CardTitle className="text-base">Transacciones creadas en esta sesión</CardTitle>
         </CardHeader>
         <CardContent className="p-0 sm:p-6 sm:pb-0">
-          {transactions.length === 0 ? (
+          {transactions.length === 0 && !loadingList ? (
             <p className="text-center text-slate-400 text-sm py-12">
               No hay transacciones en esta sesión. Usa el botón para crear una.
             </p>
+          ) : loadingList ? (
+            <p className="text-center text-slate-400 text-sm py-12">Cargando…</p>
           ) : (
             <>
               <div className="overflow-x-auto">

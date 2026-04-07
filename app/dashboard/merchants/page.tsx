@@ -39,16 +39,15 @@ const emptyForm: RegisterMerchantRequest = {
 };
 
 export default function MerchantsPage() {
-  const [merchants, setMerchants] = useState<Merchant[]>(() => {
-    try {
-      const saved = sessionStorage.getItem("merchants");
-      return saved ? (JSON.parse(saved) as Merchant[]) : [];
-    } catch { return []; }
-  });
+  const [merchants, setMerchants] = useState<Merchant[]>([]);
+  const [loadingList, setLoadingList] = useState(true);
 
   useEffect(() => {
-    sessionStorage.setItem("merchants", JSON.stringify(merchants));
-  }, [merchants]);
+    merchantApi.list()
+      .then(setMerchants)
+      .catch(() => {})
+      .finally(() => setLoadingList(false));
+  }, []);
   const [page, setPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -201,10 +200,12 @@ export default function MerchantsPage() {
           <CardTitle className="text-base">Listado de comerciantes</CardTitle>
         </CardHeader>
         <CardContent className="p-0 sm:p-6 sm:pb-0">
-          {merchants.length === 0 ? (
+          {merchants.length === 0 && !loadingList ? (
             <p className="text-center text-slate-400 text-sm py-12">
               No hay comerciantes registrados aún. Usa el botón para registrar uno.
             </p>
+          ) : loadingList ? (
+            <p className="text-center text-slate-400 text-sm py-12">Cargando…</p>
           ) : (
             <>
               <div className="overflow-x-auto">

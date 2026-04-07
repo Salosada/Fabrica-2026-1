@@ -25,6 +25,12 @@ export interface Merchant {
   status: "INACTIVE" | "VERIFIED" | "SUSPENDED";
 }
 
+export interface CredentialItem {
+  publicId: string;
+  merchantId: string;
+  active: boolean;
+}
+
 export interface CredentialResponse {
   publicId: string;
   secret: string;
@@ -79,6 +85,7 @@ export const authApi = {
 // ─── Merchants ────────────────────────────────────────────────────────────────
 
 export const merchantApi = {
+  list: () => request<Merchant[]>("/api/v1/merchants"),
   create: (data: RegisterMerchantRequest) =>
     request<Merchant>("/api/v1/merchants", {
       method: "POST",
@@ -89,6 +96,7 @@ export const merchantApi = {
 // ─── Credentials ─────────────────────────────────────────────────────────────
 
 export const credentialApi = {
+  list: () => request<CredentialItem[]>("/api/v1/credentials"),
   generate: (merchantId: string) =>
     request<CredentialResponse>("/api/v1/credentials/generate", {
       method: "POST",
@@ -99,6 +107,7 @@ export const credentialApi = {
 // ─── Transactions ─────────────────────────────────────────────────────────────
 
 export const transactionApi = {
+  list: () => request<Transaction[]>("/api/v1/transactions"),
   create: (data: CreateTransactionRequest) =>
     request<Transaction>("/api/v1/transactions", {
       method: "POST",
