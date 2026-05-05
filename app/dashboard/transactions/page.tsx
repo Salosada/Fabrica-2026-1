@@ -15,7 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TablePagination } from "@/components/ui/pagination";
-import { transactionApi, type Transaction, type CreateTransactionRequest } from "@/lib/api";
+import { transactionApi, authStore, type Transaction } from "@/lib/api";
 
 const PAGE_SIZE = 5;
 
@@ -43,6 +43,13 @@ function formatCOP(amount: number) {
   }).format(amount);
 }
 
+interface CreateForm {
+  publicId: string;
+  secretKey: string;
+  merchantId: string;
+  amount: number;
+}
+
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loadingList, setLoadingList] = useState(true);
@@ -53,11 +60,17 @@ export default function TransactionsPage() {
       .catch(() => {})
       .finally(() => setLoadingList(false));
   }, []);
+
   const [page, setPage] = useState(1);
 
   // Create form
   const [showCreate, setShowCreate] = useState(false);
-  const [createForm, setCreateForm] = useState<CreateTransactionRequest>({ merchantId: "", amount: 0 });
+  const [createForm, setCreateForm] = useState<CreateForm>({
+    publicId: "",
+    secretKey: "",
+    merchantId: authStore.getMerchantId() ?? "",
+    amount: 0,
+  });
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
@@ -75,9 +88,14 @@ export default function TransactionsPage() {
     setCreating(true);
     setCreateError(null);
     try {
-      const created = await transactionApi.create(createForm);
+      const created = await transactionApi.create({
+        publicId: createForm.publicId.trim(),
+        secretKey: createForm.secretKey.trim(),
+        merchantId: createForm.merchantId.trim(),
+        amount: createForm.amount,
+      });
       setTransactions((prev) => [created, ...prev]);
-      setCreateForm({ merchantId: "", amount: 0 });
+      setCreateForm((f) => ({ ...f, merchantId: authStore.getMerchantId() ?? "", amount: 0 }));
       setShowCreate(false);
       setPage(1);
     } catch (err) {
@@ -100,6 +118,10 @@ export default function TransactionsPage() {
     } finally {
       setSearching(false);
     }
+  }
+
+  function field(key: keyof CreateForm, value: string | number) {
+    setCreateForm((f) => ({ ...f, [key]: value }));
   }
 
   return (
@@ -141,19 +163,67 @@ export default function TransactionsPage() {
       {showCreate && (
         <Card className="border-amber-200">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-amber-800">Crear nueva transacción</CardTitle>
+            <CardTitle className="text-sm text-amber-800">
+              Crear nueva transacción
+            </CardTitle>
+            <p className="text-xs text-slate-500 mt-1">
+              Se requieren las credenciales API del comercio (obtenidas al generar credenciales).
+            </p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleCreate} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+              {/* Credential fields */}
+              <div className="sm:col-span-2 rounded-lg bg-amber-50 border border-amber-200 p-4 space-y-4">
+                <p className="text-xs font-semibold text-amber-800 uppercase tracking-wide">
+                  Credenciales API (headers de autenticación)
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="txPublicId">
+                      Public ID{" "}
+                      <span className="text-slate-400 font-normal">(X-Public-Id)</span>
+                    </Label>
+                    <Input
+                      id="txPublicId"
+                      placeholder="pk_live_..."
+                      value={createForm.publicId}
+                      onChange={(e) => field("publicId", e.target.value)}
+                      required
+                      className="font-mono text-xs"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="txSecretKey">
+                      Secret Key{" "}
+                      <span className="text-slate-400 font-normal">(X-Api-Secret)</span>
+                    </Label>
+                    <Input
+                      id="txSecretKey"
+                      type="password"
+                      placeholder="sk_live_..."
+                      value={createForm.secretKey}
+                      onChange={(e) => field("secretKey", e.target.value)}
+                      required
+                      className="font-mono text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Transaction data */}
               <div className="space-y-2">
                 <Label htmlFor="txMerchantId">ID del comerciante</Label>
                 <Input
                   id="txMerchantId"
                   placeholder="mch_..."
                   value={createForm.merchantId}
-                  onChange={(e) => setCreateForm((f) => ({ ...f, merchantId: e.target.value }))}
-                  required
+                  onChange={(e) => field("merchantId", e.target.value)}
+                  className="font-mono text-xs"
                 />
+                <p className="text-xs text-slate-400">
+                  Opcional: se infiere automáticamente de las credenciales.
+                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="txAmount">Monto (COP)</Label>
@@ -164,10 +234,11 @@ export default function TransactionsPage() {
                   step="0.01"
                   placeholder="150000"
                   value={createForm.amount || ""}
-                  onChange={(e) => setCreateForm((f) => ({ ...f, amount: parseFloat(e.target.value) || 0 }))}
+                  onChange={(e) => field("amount", parseFloat(e.target.value) || 0)}
                   required
                 />
               </div>
+
               {createError && (
                 <div className="sm:col-span-2 rounded-md bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700">
                   {createError}
@@ -231,12 +302,12 @@ export default function TransactionsPage() {
 
       <Card className="shadow-sm">
         <CardHeader className="border-b pb-4">
-          <CardTitle className="text-base">Transacciones creadas en esta sesión</CardTitle>
+          <CardTitle className="text-base">Historial de transacciones</CardTitle>
         </CardHeader>
         <CardContent className="p-0 sm:p-6 sm:pb-0">
           {transactions.length === 0 && !loadingList ? (
             <p className="text-center text-slate-400 text-sm py-12">
-              No hay transacciones en esta sesión. Usa el botón para crear una.
+              No hay transacciones. Usa el botón para crear una con tus credenciales API.
             </p>
           ) : loadingList ? (
             <p className="text-center text-slate-400 text-sm py-12">Cargando…</p>

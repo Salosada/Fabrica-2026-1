@@ -118,6 +118,19 @@ export interface CreateTransactionRequest {
   amount: number;
 }
 
+export interface CreateTransactionWithCreds extends CreateTransactionRequest {
+  publicId: string;
+  secretKey: string;
+}
+
+export interface AccountStatus {
+  email: string;
+  role: string;
+  merchantId: string | null;
+  accountActivated: boolean;
+  invitationToken: string | null;
+}
+
 // ─── HTTP helper ──────────────────────────────────────────────────────────────
 
 async function request<T>(
@@ -200,14 +213,32 @@ export const credentialApi = {
 
 export const transactionApi = {
   list: () =>
-    request<Transaction[]>("/api/v1/transactions"),
-  create: (data: CreateTransactionRequest) =>
+    request<Transaction[]>("/api/v1/transactions", {}, true),
+  create: ({ publicId, secretKey, ...body }: CreateTransactionWithCreds) =>
     request<Transaction>("/api/v1/transactions", {
       method: "POST",
-      body: JSON.stringify(data),
+      body: JSON.stringify(body),
+      headers: {
+        "Content-Type": "application/json",
+        "X-Public-Id": publicId,
+        "X-Api-Secret": secretKey,
+      },
     }),
   getById: (id: string) =>
-    request<Transaction>(`/api/v1/transactions/${id}`),
+    request<Transaction>(`/api/v1/transactions/${id}`, {}, true),
+};
+
+// ─── Admin — Accounts (/api/v1/admin/accounts) ───────────────────────────────
+
+export const accountApi = {
+  list: () =>
+    request<AccountStatus[]>("/api/v1/admin/accounts", {}, true),
+  activate: (merchantId: string, newPassword: string) =>
+    request<{ token: string; role: string; merchantId: string | null }>(
+      `/api/v1/admin/accounts/${merchantId}/activate`,
+      { method: "POST", body: JSON.stringify({ newPassword }) },
+      true
+    ),
 };
 
 // ─── Merchant Portal (/api/v1/merchant-portal) — solo ROLE_MERCHANT ───────────
