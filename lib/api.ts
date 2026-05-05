@@ -1,12 +1,35 @@
 // All API calls go through the Next.js proxy at /backend/* → backend server
-// This avoids CORS issues when frontend and backend are on different domains.
+// next.config.ts rewrites /backend/:path* → BACKEND_URL/:path*  (server-side, no CORS)
 const BASE_URL = "/backend";
+
+// ─── Token storage (client-side only) ─────────────────────────────────────────
+
+const TOKEN_KEY = "appstripe_jwt";
+
+export const tokenStore = {
+  get: (): string | null =>
+    typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null,
+  set: (token: string): void => localStorage.setItem(TOKEN_KEY, token),
+  clear: (): void => localStorage.removeItem(TOKEN_KEY),
+};
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export interface CodeRequest {
-  username: string;
-  code: number;
+export interface LoginRequest {
+  email: string;
+  password: string;
+  totpCode?: number;
+}
+
+export interface LoginResponse {
+  token: string;
+  role: string;
+  merchantId: string | null;
+}
+
+export interface ActivateAccountRequest {
+  invitationToken: string;
+  newPassword: string;
 }
 
 export interface RegisterMerchantRequest {
@@ -52,11 +75,22 @@ export interface CreateTransactionRequest {
 
 async function request<T>(
   path: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  authenticated = false
 ): Promise<T> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(options.headers as Record<string, string>),
+  };
+
+  if (authenticated) {
+    const token = tokenStore.get();
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+  }
+
   const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { "Content-Type": "application/json", ...options.headers },
     ...options,
+    headers,
   });
 
   if (!res.ok) {
@@ -64,7 +98,6 @@ async function request<T>(
     throw new Error(text || `HTTP ${res.status}`);
   }
 
-  // Some endpoints return plain boolean / empty body
   const contentType = res.headers.get("content-type") ?? "";
   if (contentType.includes("application/json")) {
     return res.json() as Promise<T>;
@@ -72,42 +105,55 @@ async function request<T>(
   return res.text() as unknown as T;
 }
 
-// ─── Security ─────────────────────────────────────────────────────────────────
+// ─── Auth ─────────────────────────────────────────────────────────────────────
 
 export const authApi = {
-  verify2fa: (body: CodeRequest) =>
-    request<boolean>("/2fa/verify", {
+  login: (body: LoginRequest) =>
+    request<LoginResponse>("/api/v1/auth/login", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  activateMerchant: (body: ActivateAccountRequest) =>
+    request<LoginResponse>("/api/v1/auth/merchant/activate", {
       method: "POST",
       body: JSON.stringify(body),
     }),
 };
 
-// ─── Merchants ────────────────────────────────────────────────────────────────
+// ─── Admin — Merchants (/api/v1/admin/merchants) ──────────────────────────────
 
 export const merchantApi = {
-  list: () => request<Merchant[]>("/api/v1/merchants"),
+  list: () =>
+    request<Merchant[]>("/api/v1/admin/merchants", {}, true),
   create: (data: RegisterMerchantRequest) =>
-    request<Merchant>("/api/v1/merchants", {
+    request<Merchant>("/api/v1/admin/merchants", {
       method: "POST",
       body: JSON.stringify(data),
-    }),
+    }, true),
 };
 
-// ─── Credentials ─────────────────────────────────────────────────────────────
+// ─── Admin — Credentials (/api/v1/admin/credentials) ─────────────────────────
 
 export const credentialApi = {
-  list: () => request<CredentialItem[]>("/api/v1/credentials"),
+  list: () =>
+    request<CredentialItem[]>("/api/v1/admin/credentials", {}, true),
   generate: (merchantId: string) =>
-    request<CredentialResponse>("/api/v1/credentials/generate", {
+    request<CredentialResponse>("/api/v1/admin/credentials/generate", {
       method: "POST",
       body: JSON.stringify({ merchantId }),
-    }),
+    }, true),
+  revoke: (publicId: string) =>
+    request<CredentialItem>(`/api/v1/admin/credentials/${publicId}/revoke`, {
+      method: "PATCH",
+    }, true),
 };
 
-// ─── Transactions ─────────────────────────────────────────────────────────────
+// ─── Transactions (/api/v1/transactions) ──────────────────────────────────────
 
 export const transactionApi = {
-  list: () => request<Transaction[]>("/api/v1/transactions"),
+  list: () =>
+    request<Transaction[]>("/api/v1/transactions"),
   create: (data: CreateTransactionRequest) =>
     request<Transaction>("/api/v1/transactions", {
       method: "POST",
