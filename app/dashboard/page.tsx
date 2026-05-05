@@ -12,12 +12,12 @@ interface Stats {
 }
 
 const sprintItems = [
-  { label: "HU001 — Registro de nuevo comercio",                      hu: "HU001", done: true  },
-  { label: "HU002 — Generación de credenciales de acceso a la API",   hu: "HU002", done: true  },
-  { label: "HU003 — Creación de una transacción",                     hu: "HU003", done: true  },
-  { label: "HU004 — Asignación del estado inicial de un pago",        hu: "HU004", done: true  },
-  { label: "HU005 — Autenticación con doble factor (provisional)",    hu: "HU005", done: false },
-  { label: "HU006 — Validación de credenciales por solicitud",        hu: "HU006", done: false },
+  { label: "HU007 — Consulta del perfil del comercio autenticado",        hu: "HU007", done: true  },
+  { label: "HU008 — Actualización de datos de perfil y configuración",    hu: "HU008", done: true  },
+  { label: "HU009 — Autenticación JWT con login email/password",          hu: "HU009", done: true  },
+  { label: "HU010 — Revocación de credencial API por administrador",      hu: "HU010", done: true  },
+  { label: "HU011 — Portal de transacciones del comercio autenticado",    hu: "HU011", done: false },
+  { label: "HU012 — Notificaciones de cambio de estado de transacción",   hu: "HU012", done: false },
 ];
 
 function formatCOP(amount: number) {
@@ -131,8 +131,8 @@ export default function DashboardPage() {
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">
                 1
               </span>
-              <CardTitle className="text-base">Estado del proyecto — Sprint 1</CardTitle>
-            </div>
+            <CardTitle className="text-base">Estado del proyecto — Sprint 2</CardTitle>
+          </div>
             <span className="rounded-full bg-emerald-100 border border-emerald-200 px-3 py-0.5 text-xs font-semibold text-emerald-700">
               4 / 6 completadas
             </span>

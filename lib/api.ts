@@ -2,15 +2,46 @@
 // next.config.ts rewrites /backend/:path* → BACKEND_URL/:path*  (server-side, no CORS)
 const BASE_URL = "/backend";
 
-// ─── Token storage (client-side only) ─────────────────────────────────────────
+// ─── Auth storage (client-side only) ──────────────────────────────────────────
 
-const TOKEN_KEY = "appstripe_jwt";
+const safe = (fn: () => void) => {
+  if (typeof window !== "undefined") fn();
+};
 
+export const authStore = {
+  getToken: (): string | null =>
+    typeof window !== "undefined" ? localStorage.getItem("appstripe_jwt") : null,
+  getRole: (): string | null =>
+    typeof window !== "undefined" ? localStorage.getItem("appstripe_role") : null,
+  getMerchantId: (): string | null =>
+    typeof window !== "undefined" ? localStorage.getItem("appstripe_merchant_id") : null,
+  save: (res: { token: string; role: string; merchantId?: string | null }) => {
+    safe(() => {
+      localStorage.setItem("appstripe_jwt", res.token);
+      localStorage.setItem("appstripe_role", res.role);
+      if (res.merchantId) localStorage.setItem("appstripe_merchant_id", res.merchantId);
+    });
+  },
+  clear: () => {
+    safe(() => {
+      localStorage.removeItem("appstripe_jwt");
+      localStorage.removeItem("appstripe_role");
+      localStorage.removeItem("appstripe_merchant_id");
+    });
+  },
+  isAdmin: (): boolean =>
+    typeof window !== "undefined" &&
+    (localStorage.getItem("appstripe_role") ?? "").includes("ADMIN"),
+  isMerchant: (): boolean =>
+    typeof window !== "undefined" &&
+    (localStorage.getItem("appstripe_role") ?? "").includes("MERCHANT"),
+};
+
+// Legacy alias for backward compat
 export const tokenStore = {
-  get: (): string | null =>
-    typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null,
-  set: (token: string): void => localStorage.setItem(TOKEN_KEY, token),
-  clear: (): void => localStorage.removeItem(TOKEN_KEY),
+  get: authStore.getToken,
+  set: (token: string) => safe(() => localStorage.setItem("appstripe_jwt", token)),
+  clear: authStore.clear,
 };
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -30,6 +61,22 @@ export interface LoginResponse {
 export interface ActivateAccountRequest {
   invitationToken: string;
   newPassword: string;
+}
+
+export interface MerchantProfileResponse {
+  id: string;
+  businessName: string;
+  businessId: string;
+  email: string;
+  businessType: string;
+  status: "INACTIVE" | "VERIFIED" | "SUSPENDED";
+  permission: string;
+}
+
+export interface UpdateProfileRequest {
+  businessName: string;
+  email: string;
+  businessType: string;
 }
 
 export interface RegisterMerchantRequest {
@@ -84,7 +131,7 @@ async function request<T>(
   };
 
   if (authenticated) {
-    const token = tokenStore.get();
+    const token = authStore.getToken();
     if (token) headers["Authorization"] = `Bearer ${token}`;
   }
 
@@ -161,4 +208,23 @@ export const transactionApi = {
     }),
   getById: (id: string) =>
     request<Transaction>(`/api/v1/transactions/${id}`),
+};
+
+// ─── Merchant Portal (/api/v1/merchant-portal) — solo ROLE_MERCHANT ───────────
+
+export const merchantPortalApi = {
+  getProfile: () =>
+    request<MerchantProfileResponse>("/api/v1/merchant-portal/profile", {}, true),
+
+  updateProfile: (data: UpdateProfileRequest) =>
+    request<MerchantProfileResponse>("/api/v1/merchant-portal/update-profile", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }, true),
+
+  getCredentials: () =>
+    request<CredentialItem[]>("/api/v1/merchant-portal/credentials", {}, true),
+
+  getTransactions: () =>
+    request<Transaction[]>("/api/v1/merchant-portal/transactions", {}, true),
 };

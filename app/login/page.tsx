@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { authApi } from "@/lib/api";
+import { authApi, authStore } from "@/lib/api";
 import {
   Card,
   CardContent,
@@ -15,46 +15,36 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-type Step = "username" | "code";
-
 export default function LoginPage() {
   const router = useRouter();
-  const [step, setStep] = useState<Step>("username");
-  const [username, setUsername] = useState("");
-  const [code, setCode] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [totpCode, setTotpCode] = useState("");
+  const [showTotp, setShowTotp] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  function handleUsernameSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!username.trim()) {
-      setError("Ingresa tu nombre de usuario.");
-      return;
-    }
-    setError(null);
-    setStep("code");
-  }
-
-  async function handleCodeSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const parsed = parseInt(code, 10);
-    if (isNaN(parsed)) {
-      setError("El código debe ser numérico.");
-      return;
-    }
-    setError(null);
     setLoading(true);
+    setError(null);
     try {
-      const valid = await authApi.verify2fa({ username, code: parsed });
-      if (valid) {
-        router.push("/dashboard");
-      } else {
-        setError("Código incorrecto o expirado. Intenta de nuevo.");
-      }
+      const payload = {
+        email: email.trim(),
+        password,
+        ...(showTotp && totpCode ? { totpCode: parseInt(totpCode, 10) } : {}),
+      };
+      const response = await authApi.login(payload);
+      authStore.save(response);
+      router.push("/dashboard");
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Error al conectar con el servidor."
-      );
+      const msg = err instanceof Error ? err.message : "Error al conectar con el servidor.";
+      if (msg.toLowerCase().includes("2fa") || msg.toLowerCase().includes("totp") || msg.toLowerCase().includes("factor")) {
+        setShowTotp(true);
+        setError("Este usuario requiere código 2FA. Ingresa el código de Google Authenticator.");
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -80,7 +70,7 @@ export default function LoginPage() {
           <div className="flex flex-col gap-2.5 pt-1 text-sm text-slate-400">
             <span className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-emerald-400" />
-              Autenticación de dos factores
+              Autenticación JWT segura
             </span>
             <span className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-blue-400" />
@@ -105,122 +95,88 @@ export default function LoginPage() {
           <span className="text-xl font-bold tracking-tight text-slate-900">Paycore</span>
         </div>
 
-      <Card className="w-full max-w-sm shadow-xl border border-slate-200 bg-white">
-        {/* ── Header ── */}
-        <CardHeader className="space-y-1 pb-3">
-          <CardTitle className="text-xl font-bold text-slate-900">
-            {step === "username" ? "Iniciar sesión" : "Verificación 2FA"}
-          </CardTitle>
-          <CardDescription className="text-slate-500 text-sm">
-            {step === "username"
-              ? "Ingresa tu nombre de usuario para continuar."
-              : `Código de Google Authenticator para "${username}".`}
-          </CardDescription>
-        </CardHeader>
+        <Card className="w-full max-w-sm shadow-xl border border-slate-200 bg-white">
+          <CardHeader className="space-y-1 pb-4">
+            <CardTitle className="text-xl font-bold text-slate-900">Iniciar sesión</CardTitle>
+            <CardDescription className="text-slate-500 text-sm">
+              Ingresa tus credenciales para acceder al panel.
+            </CardDescription>
+          </CardHeader>
 
-        {/* Step indicator */}
-        <div className="px-6 pb-4">
-          <div className="flex items-center gap-2">
-            <div
-              className={`flex h-6 w-6 items-center justify-center rounded-full text-white text-xs font-bold transition-colors ${step === "code" ? "bg-emerald-500" : "bg-blue-600"}`}
-            >
-              {step === "code" ? "✓" : "1"}
-            </div>
-            <div className={`h-0.5 flex-1 rounded transition-colors ${step === "code" ? "bg-blue-500" : "bg-slate-200"}`} />
-            <div
-              className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold transition-colors ${step === "code" ? "bg-blue-600 text-white" : "bg-slate-200 text-slate-400"}`}
-            >
-              2
-            </div>
-          </div>
-          <div className="flex justify-between mt-1">
-            <span className="text-xs text-slate-500">Usuario</span>
-            <span className="text-xs text-slate-500">Código 2FA</span>
-          </div>
-        </div>
-
-        {/* ── Username step ── */}
-        {step === "username" && (
-          <form onSubmit={handleUsernameSubmit}>
+          <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4 pt-0">
               <div className="space-y-2">
-                <Label htmlFor="username" className="text-slate-700 font-medium text-sm">Usuario</Label>
+                <Label htmlFor="email" className="text-slate-700 font-medium text-sm">
+                  Correo electrónico
+                </Label>
                 <Input
-                  id="username"
+                  id="email"
+                  type="email"
                   placeholder="admin@paycore.com"
-                  autoComplete="username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
                   className="border-slate-300"
                 />
               </div>
-              {error && (
-                <div className="flex items-center gap-2 rounded-md bg-red-50 border border-red-200 px-3 py-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500 flex-shrink-0">
-                    <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-                  </svg>
-                  <p className="text-sm text-red-600">{error}</p>
-                </div>
-              )}
-            </CardContent>
-            <CardFooter className="pt-0">
-              <Button className="w-full font-semibold" type="submit">
-                Continuar →
-              </Button>
-            </CardFooter>
-          </form>
-        )}
 
-        {/* ── 2FA Code step ── */}
-        {step === "code" && (
-          <form onSubmit={handleCodeSubmit}>
-            <CardContent className="space-y-4 pt-0">
-              <div className="rounded-md bg-slate-50 border border-slate-200 px-3 py-2 text-sm">
-                <span className="text-slate-500">Usuario: </span>
-                <span className="font-medium text-slate-800">{username}</span>
-              </div>
               <div className="space-y-2">
-                <Label htmlFor="code" className="text-slate-700 font-medium text-sm">Código de autenticación</Label>
+                <Label htmlFor="password" className="text-slate-700 font-medium text-sm">
+                  Contraseña
+                </Label>
                 <Input
-                  id="code"
-                  placeholder="123456"
-                  inputMode="numeric"
-                  maxLength={6}
-                  autoComplete="one-time-code"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-                  className="text-center text-xl tracking-[0.5em] font-mono border-slate-300"
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="border-slate-300"
                 />
-                <p className="text-xs text-slate-500 text-center">Para esta demo, ingresa el código <span className="font-semibold text-slate-700">123456</span></p>
               </div>
+
+              {showTotp && (
+                <div className="space-y-2">
+                  <Label htmlFor="totp" className="text-slate-700 font-medium text-sm">
+                    Código 2FA (Google Authenticator)
+                  </Label>
+                  <Input
+                    id="totp"
+                    placeholder="123456"
+                    inputMode="numeric"
+                    maxLength={6}
+                    autoComplete="one-time-code"
+                    value={totpCode}
+                    onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ""))}
+                    className="text-center text-xl tracking-[0.5em] font-mono border-slate-300"
+                    autoFocus
+                  />
+                </div>
+              )}
+
               {error && (
-                <div className="flex items-center gap-2 rounded-md bg-red-50 border border-red-200 px-3 py-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500 flex-shrink-0">
+                <div className="flex items-start gap-2 rounded-md bg-red-50 border border-red-200 px-3 py-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500 flex-shrink-0 mt-0.5">
                     <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
                   </svg>
                   <p className="text-sm text-red-600">{error}</p>
                 </div>
               )}
             </CardContent>
-            <CardFooter className="flex flex-col gap-2 pt-0">
+
+            <CardFooter className="pt-0">
               <Button className="w-full font-semibold" type="submit" disabled={loading}>
-                {loading ? "Verificando..." : "Verificar código"}
+                {loading ? "Verificando…" : "Entrar"}
               </Button>
-              <button
-                type="button"
-                className="w-full rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-colors"
-                onClick={() => {
-                  setStep("username");
-                  setCode("");
-                  setError(null);
-                }}
-              >
-                ← Volver
-              </button>
             </CardFooter>
           </form>
-        )}
-      </Card>
+        </Card>
+
+        <p className="mt-4 text-xs text-slate-400 text-center">
+          Admin por defecto: <span className="font-mono text-slate-500">admin@paycore.com</span>
+        </p>
       </div>
     </div>
   );

@@ -29,13 +29,17 @@ export default function CredentialsPage() {
       .catch(() => {})
       .finally(() => setLoadingList(false));
   }, []);
+
   const [page, setPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const [merchantId, setMerchantId] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [newSecret, setNewSecret] = useState<CredentialResponse | null>(null);
+  const [revoking, setRevoking] = useState<string | null>(null);
 
+  const activeCount = credentials.filter((c) => c.active).length;
+  const inactiveCount = credentials.filter((c) => !c.active).length;
   const totalPages = Math.ceil(credentials.length / PAGE_SIZE);
   const paged = credentials.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
@@ -60,6 +64,20 @@ export default function CredentialsPage() {
     }
   }
 
+  async function handleRevoke(publicId: string) {
+    setRevoking(publicId);
+    try {
+      await credentialApi.revoke(publicId);
+      setCredentials((prev) =>
+        prev.map((c) => (c.publicId === publicId ? { ...c, active: false } : c))
+      );
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Error al revocar credencial");
+    } finally {
+      setRevoking(null);
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Page header */}
@@ -75,8 +93,14 @@ export default function CredentialsPage() {
         <div className="flex flex-wrap gap-3">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-medium text-emerald-700">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            {credentials.length} Activas
+            {activeCount} Activas
           </span>
+          {inactiveCount > 0 && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 border border-red-200 px-3 py-1 text-xs font-medium text-red-700">
+              <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+              {inactiveCount} Revocadas
+            </span>
+          )}
         </div>
         <Button
           size="sm"
@@ -168,7 +192,9 @@ export default function CredentialsPage() {
             Cada comerciante en estado <strong>VERIFIED</strong> puede generar hasta{" "}
             <strong>3 credenciales activas</strong>. El{" "}
             <code className="bg-violet-100 px-1 rounded text-xs">secret</code>{" "}
-            se muestra <strong>una sola vez</strong> al momento de la creación — almacénalo de forma segura.
+            se muestra <strong>una sola vez</strong> al momento de la creación. Puedes revocar
+            credenciales comprometidas con el botón <strong>Revocar</strong> — las credenciales
+            revocadas no podrán usarse para crear transacciones.
           </CardDescription>
         </CardContent>
       </Card>
@@ -193,17 +219,37 @@ export default function CredentialsPage() {
                       <TableHead className="font-semibold text-slate-600">Public ID</TableHead>
                       <TableHead className="font-semibold text-slate-600">Comerciante</TableHead>
                       <TableHead className="font-semibold text-slate-600">Estado</TableHead>
+                      <TableHead className="font-semibold text-slate-600 text-right">Acción</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {paged.map((c) => (
                       <TableRow key={c.publicId} className="hover:bg-slate-50 transition-colors">
                         <TableCell className="font-mono text-xs text-slate-500">{c.publicId}</TableCell>
-                        <TableCell className="text-slate-600">{c.merchantId}</TableCell>
+                        <TableCell className="text-slate-600 font-mono text-xs">{c.merchantId}</TableCell>
                         <TableCell>
-                          <Badge variant="outline" className="bg-emerald-100 text-emerald-700 border-emerald-200">
-                            Activa
-                          </Badge>
+                          {c.active ? (
+                            <Badge variant="outline" className="bg-emerald-100 text-emerald-700 border-emerald-200">
+                              Activa
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="bg-red-100 text-red-700 border-red-200">
+                              Revocada
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {c.active && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={revoking === c.publicId}
+                              onClick={() => handleRevoke(c.publicId)}
+                              className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 text-xs h-7"
+                            >
+                              {revoking === c.publicId ? "Revocando…" : "Revocar"}
+                            </Button>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}
