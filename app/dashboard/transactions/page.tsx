@@ -245,7 +245,7 @@ export default function TransactionsPage() {
         <p className="text-amber-100 text-sm mt-1">
           {isMerchant
             ? "Historial de pagos de tu comercio."
-            : "Crea y consulta transacciones con credenciales API (headers X-Public-Id, X-Secret, X-Merchant-Id)."}
+            : "Crea y consulta transacciones con las credenciales API del comercio."}
         </p>
       </div>
 
@@ -297,7 +297,7 @@ export default function TransactionsPage() {
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="txPublicId">Public ID (X-Public-Id)</Label>
+                    <Label htmlFor="txPublicId">Public ID (Public Key)</Label>
                     <Input
                       id="txPublicId"
                       value={createForm.publicId}
@@ -307,7 +307,7 @@ export default function TransactionsPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="txSecret">Secret (X-Secret)</Label>
+                    <Label htmlFor="txSecret">Secret Key</Label>
                     <Input
                       id="txSecret"
                       type="password"
@@ -318,7 +318,7 @@ export default function TransactionsPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="txMerchantId">Merchant ID (X-Merchant-Id)</Label>
+                    <Label htmlFor="txMerchantId">Merchant ID</Label>
                     <Input
                       id="txMerchantId"
                       value={createForm.merchantId}
@@ -381,7 +381,7 @@ export default function TransactionsPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="searchPublicId">Public ID</Label>
+                  <Label htmlFor="searchPublicId">Public ID (Public Key)</Label>
                   <Input
                     id="searchPublicId"
                     value={searchCreds.publicId}
@@ -393,7 +393,7 @@ export default function TransactionsPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="searchSecret">Secret</Label>
+                  <Label htmlFor="searchSecret">Secret Key</Label>
                   <Input
                     id="searchSecret"
                     type="password"
@@ -475,7 +475,7 @@ export default function TransactionsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Public ID</Label>
+              <Label>Public ID (Public Key)</Label>
               <Input
                 value={opCreds.publicId}
                 onChange={(e) => setOpCreds((c) => ({ ...c, publicId: e.target.value }))}
@@ -483,7 +483,7 @@ export default function TransactionsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Secret</Label>
+              <Label>Secret Key</Label>
               <Input
                 type="password"
                 value={opCreds.secret}
