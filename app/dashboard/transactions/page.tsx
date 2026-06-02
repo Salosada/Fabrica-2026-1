@@ -453,6 +453,7 @@ export default function TransactionsPage() {
         </Card>
       )}
 
+      {!isMerchant && (
       <Card className="border-violet-200">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm text-violet-900">
@@ -573,6 +574,7 @@ export default function TransactionsPage() {
           )}
         </CardContent>
       </Card>
+      )}
 
       <Card className="shadow-sm">
         <CardHeader className="border-b pb-4">
