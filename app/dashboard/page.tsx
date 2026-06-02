@@ -26,8 +26,11 @@ function formatCOP(amount: number) {
   }).format(amount);
 }
 
-function sumAmount(transactions: Transaction[]) {
-  return transactions.reduce((sum, t) => sum + t.amount, 0);
+function sumNetAmount(transactions: Transaction[]) {
+  return transactions.reduce(
+    (sum, t) => sum + t.amount - (t.refundedAmount ?? 0),
+    0
+  );
 }
 
 export default function DashboardPage() {
@@ -45,7 +48,7 @@ export default function DashboardPage() {
             merchants: 1,
             credentials: credentials.filter((c) => c.active).length,
             transactions: transactions.length,
-            totalAmount: sumAmount(transactions),
+            totalAmount: sumNetAmount(transactions),
           });
         })
         .catch(() => {});
@@ -60,7 +63,7 @@ export default function DashboardPage() {
             merchants: merchants.length,
             credentials: credentials.filter((c) => c.active).length,
             transactions: transactions.length,
-            totalAmount: sumAmount(transactions),
+            totalAmount: sumNetAmount(transactions),
           });
         })
         .catch(() => {});
@@ -79,7 +82,7 @@ export default function DashboardPage() {
       color: "text-amber-600",
     },
     {
-      title: "Monto total",
+      title: "Monto neto",
       value: stats ? formatCOP(stats.totalAmount) : "…",
       color: "text-blue-600",
     },

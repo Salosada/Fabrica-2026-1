@@ -57,6 +57,35 @@ function formatCOP(amount: number) {
   }).format(amount);
 }
 
+function refundedOf(t: Transaction): number {
+  return t.refundedAmount ?? 0;
+}
+
+function netAmount(t: Transaction): number {
+  return t.amount - refundedOf(t);
+}
+
+function isApproved(t: Transaction): boolean {
+  if (t.status === "REFUNDED" || t.status === "PARTIALLY_REFUNDED") return false;
+  return (
+    t.status === "APPROVED" ||
+    t.status === "COMPLETED" ||
+    t.result === "APPROVED"
+  );
+}
+
+function isRefunded(t: Transaction): boolean {
+  return t.status === "REFUNDED" || t.status === "PARTIALLY_REFUNDED";
+}
+
+function isRejectedOrFailed(t: Transaction): boolean {
+  return (
+    t.status === "REJECTED" ||
+    t.status === "FAILED" ||
+    t.result === "REJECTED"
+  );
+}
+
 interface CreateForm extends ApiCredentialHeaders {
   amount: number;
 }
@@ -252,19 +281,16 @@ export default function TransactionsPage() {
       <div className="flex flex-wrap gap-3 items-center justify-between">
         <div className="flex flex-wrap gap-3">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-medium text-emerald-700">
-            {transactions.filter((t) =>
-              ["APPROVED", "COMPLETED"].includes(t.status) || t.result === "APPROVED"
-            ).length}{" "}
-            Aprobadas
+            {transactions.filter(isApproved).length} Aprobadas
+          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 border border-indigo-200 px-3 py-1 text-xs font-medium text-indigo-700">
+            {transactions.filter(isRefunded).length} Reembolsadas
           </span>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-50 border border-sky-200 px-3 py-1 text-xs font-medium text-sky-700">
             {transactions.filter((t) => t.status === "PROCESSING").length} En proceso
           </span>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 border border-red-200 px-3 py-1 text-xs font-medium text-red-700">
-            {transactions.filter((t) =>
-              ["REJECTED", "FAILED"].includes(t.status) || t.result === "REJECTED"
-            ).length}{" "}
-            Rechazadas/Fallidas
+            {transactions.filter(isRejectedOrFailed).length} Rechazadas/Fallidas
           </span>
         </div>
         {!isMerchant && (
@@ -597,17 +623,28 @@ export default function TransactionsPage() {
                     <TableRow className="bg-slate-50 hover:bg-slate-50">
                       <TableHead className="font-semibold text-slate-600">ID</TableHead>
                       <TableHead className="font-semibold text-slate-600">Comerciante</TableHead>
-                      <TableHead className="font-semibold text-slate-600 text-right">Monto</TableHead>
+                      <TableHead className="font-semibold text-slate-600 text-right">Monto cobrado</TableHead>
+                      <TableHead className="font-semibold text-slate-600 text-right">Reembolsado</TableHead>
+                      <TableHead className="font-semibold text-slate-600 text-right">Monto neto</TableHead>
                       <TableHead className="font-semibold text-slate-600">Estado</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paged.map((t) => (
+                    {paged.map((t) => {
+                      const refunded = refundedOf(t);
+                      const net = netAmount(t);
+                      return (
                       <TableRow key={t.id} className="hover:bg-slate-50 transition-colors">
                         <TableCell className="font-mono text-xs text-slate-500">{t.id}</TableCell>
                         <TableCell className="text-slate-600">{t.merchantId}</TableCell>
-                        <TableCell className="text-right font-semibold text-slate-800">
+                        <TableCell className="text-right text-slate-600">
                           {formatCOP(t.amount)}
+                        </TableCell>
+                        <TableCell className="text-right text-indigo-700">
+                          {refunded > 0 ? formatCOP(refunded) : "—"}
+                        </TableCell>
+                        <TableCell className="text-right font-semibold text-slate-800">
+                          {formatCOP(net)}
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className={statusStyleMap[t.status]}>
@@ -615,7 +652,8 @@ export default function TransactionsPage() {
                           </Badge>
                         </TableCell>
                       </TableRow>
-                    ))}
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>
