@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authApi, authStore } from "@/lib/api";
 import {
@@ -175,7 +176,12 @@ export default function LoginPage() {
         </Card>
 
         <p className="mt-4 text-xs text-slate-400 text-center">
-          Admin por defecto: <span className="font-mono text-slate-500">admin@paycore.com</span>
+          Admin: <span className="font-mono text-slate-500">admin@paycore.com</span> /{" "}
+          <span className="font-mono text-slate-500">admin123</span>
+          <br />
+          <Link href="/activate" className="text-blue-600 hover:underline mt-1 inline-block">
+            Activar cuenta de comercio
+          </Link>
         </p>
       </div>
     </div>

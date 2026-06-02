@@ -24,7 +24,8 @@ export default function CredentialsPage() {
   const [loadingList, setLoadingList] = useState(true);
 
   useEffect(() => {
-    credentialApi.list()
+    credentialApi
+      .list()
       .then(setCredentials)
       .catch(() => {})
       .finally(() => setLoadingList(false));

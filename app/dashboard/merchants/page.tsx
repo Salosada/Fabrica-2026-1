@@ -43,7 +43,8 @@ export default function MerchantsPage() {
   const [loadingList, setLoadingList] = useState(true);
 
   useEffect(() => {
-    merchantApi.list()
+    merchantApi
+      .list()
       .then(setMerchants)
       .catch(() => {})
       .finally(() => setLoadingList(false));
@@ -73,7 +74,11 @@ export default function MerchantsPage() {
       setForm(emptyForm);
       setShowForm(false);
       setPage(1);
-      setSuccessMsg(`Comerciante "${created.businessName}" registrado correctamente. ID: ${created.id}`);
+      setSuccessMsg(
+        created.invitationToken
+          ? `Comerciante "${created.businessName}" registrado. Token de activación: ${created.invitationToken}`
+          : `Comerciante "${created.businessName}" registrado. ID: ${created.id}`
+      );
       setTimeout(() => setSuccessMsg(null), 6000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al registrar comerciante");
