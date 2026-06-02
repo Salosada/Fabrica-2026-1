@@ -66,16 +66,21 @@ function netAmount(t: Transaction): number {
 }
 
 function isApproved(t: Transaction): boolean {
-  if (t.status === "REFUNDED" || t.status === "PARTIALLY_REFUNDED") return false;
+  if (t.status === "REFUNDED") return false;
   return (
     t.status === "APPROVED" ||
+    t.status === "PARTIALLY_REFUNDED" ||
     t.status === "COMPLETED" ||
     t.result === "APPROVED"
   );
 }
 
 function isRefunded(t: Transaction): boolean {
-  return t.status === "REFUNDED" || t.status === "PARTIALLY_REFUNDED";
+  return t.status === "REFUNDED";
+}
+
+function hasPartialRefund(t: Transaction): boolean {
+  return isApproved(t) && refundedOf(t) > 0 && netAmount(t) > 0;
 }
 
 function isRejectedOrFailed(t: Transaction): boolean {
@@ -283,8 +288,11 @@ export default function TransactionsPage() {
           <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-medium text-emerald-700">
             {transactions.filter(isApproved).length} Aprobadas
           </span>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-50 border border-violet-200 px-3 py-1 text-xs font-medium text-violet-700">
+            {transactions.filter(hasPartialRefund).length} Con reembolso parcial
+          </span>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 border border-indigo-200 px-3 py-1 text-xs font-medium text-indigo-700">
-            {transactions.filter(isRefunded).length} Reembolsadas
+            {transactions.filter(isRefunded).length} Reembolsadas (total)
           </span>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-50 border border-sky-200 px-3 py-1 text-xs font-medium text-sky-700">
             {transactions.filter((t) => t.status === "PROCESSING").length} En proceso

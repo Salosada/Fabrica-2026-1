@@ -37,6 +37,13 @@ function formatPct(value: number) {
   return `${value.toFixed(1)}%`;
 }
 
+const statusReportLabels: Record<string, string> = {
+  APPROVED: "Aprobadas (activas, incluye reembolso parcial)",
+  REJECTED: "Rechazadas",
+  FAILED: "Fallidas",
+  REFUNDED: "Reembolsadas (total)",
+};
+
 export default function ReportsPage() {
   const [range, setRange] = useState(defaultRange);
   const [groupBy, setGroupBy] = useState<"DAY" | "MONTH">("DAY");
@@ -140,6 +147,9 @@ export default function ReportsPage() {
                 <p className="text-2xl font-bold text-emerald-600">
                   {formatPct(distribution.approvalRate)}
                 </p>
+                <p className="text-xs text-slate-500 mt-1">
+                  Pagos exitosos (activas + reembolso total)
+                </p>
               </div>
             </div>
             {distribution.distribution.length === 0 ? (
@@ -155,9 +165,13 @@ export default function ReportsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {distribution.distribution.map((row) => (
+                    {distribution.distribution
+                      .filter((row) => row.count > 0)
+                      .map((row) => (
                       <TableRow key={row.status}>
-                        <TableCell className="font-medium">{row.status}</TableCell>
+                        <TableCell className="font-medium">
+                          {statusReportLabels[row.status] ?? row.status}
+                        </TableCell>
                         <TableCell className="text-right">{row.count}</TableCell>
                         <TableCell className="text-right">{formatPct(row.percentage)}</TableCell>
                       </TableRow>
@@ -185,7 +199,7 @@ export default function ReportsPage() {
                     <TableRow>
                       <TableHead>Periodo</TableHead>
                       <TableHead className="text-right">Transacciones</TableHead>
-                      <TableHead className="text-right">Monto total</TableHead>
+                      <TableHead className="text-right">Monto neto</TableHead>
                       <TableHead className="text-right">Aprobadas</TableHead>
                       <TableHead className="text-right">Rechazadas</TableHead>
                       <TableHead className="text-right">Fallidas</TableHead>
